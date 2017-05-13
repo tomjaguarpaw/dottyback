@@ -1,6 +1,6 @@
 module Dottyback where
 
-import Graphics.Rendering.Cairo
+import Graphics.Rendering.Cairo hiding (x, y)
 
 
 height_ :: Num a => a
@@ -9,10 +9,12 @@ height_ = 800
 width_  :: Num a => a
 width_  = 1280
 
+main :: IO ()
 main = withImageSurface FormatRGB24 width_ height_ $ \surface -> do
     renderWith surface pic
     surfaceWriteToPNG surface "/tmp/foo.png"
 
+main2 :: IO ()
 main2 = withSVGSurface "/tmp/foo.svg" width_ height_ $ \surface -> do
     renderWith surface pic
 
@@ -103,9 +105,9 @@ drawKernelOriented k = mapM_ drawSquare squares
   where colours = [ [ y, y, y ]
                   , [ y, w, w ]
                   , [ g, g, w ] ]
-        y = (0.8, 0.8, 0.8)
-        g = (0.3, 0.3, 0.3)
-        w = (1, 1, 1)
+          where y = (0.8, 0.8, 0.8)
+                g = (0.3, 0.3, 0.3)
+                w = (1, 1, 1)
 
         squares = do x <- [-1 .. 1]
                      y <- [-1 .. 1]
@@ -120,7 +122,7 @@ drawKernelOriented k = mapM_ drawSquare squares
                           (koCenter k .+ ( fromIntegral x * koRadius k / 3 * 2
                                          , fromIntegral y * koRadius k / 3 * 2))
                           (koRadius k / 3)
-                          (colours !! (x + 1) !! (y + 1)))
+                          (colours !! (x' + 1) !! (y' + 1)))
 
 data Arc = Arc
   { arcFrom      :: Point
@@ -139,16 +141,13 @@ kernelCentre k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
 
 squareCenterRadius :: Point -> Double -> Square
 squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r) (1,1,1)
-  where d = r / 2
 
 squareCenterRadiusColor :: Point -> Double -> (Double, Double, Double) -> Square
 squareCenterRadiusColor (cx, cy) r c =
   Square (cx - r, cy - r) (cx + r, cy + r) c
-  where d = r / 2
 
 kernel3x3CenterRadius :: Point -> Double -> Kernel3x3
 kernel3x3CenterRadius (cx, cy) r = Kernel3x3 (cx - r, cy - r) (cx + r, cy + r)
-  where d = r / 2 
 
 gPlaneCenterRadius :: Point -> Double -> GPlane
 gPlaneCenterRadius p r = GPlane p r (r / 2.5)
@@ -274,11 +273,11 @@ pic = do
                                         `withinSquare`
                                         gPlaneTop gPlane2)
                                        (0.2 / 3 * sLength square)
-      arc         = Arc (koCenter kernelO)
+      arc_        = Arc (koCenter kernelO)
                         (squareCentre pixel)
                         0.3
 
-      label       = Text (midpoint (arcFrom arc) (arcTo arc))
+      label       = Text (midpoint (arcFrom arc_) (arcTo arc_))
                          "T∘Φ"
                          (height_ / 20)
 
@@ -288,5 +287,5 @@ pic = do
   drawSquare         square
   drawKernelOriented kernelO
   drawSquare         pixel
-  drawArc            arc
+  drawArc            arc_
   drawText           label
