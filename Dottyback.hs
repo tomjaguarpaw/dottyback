@@ -7,6 +7,9 @@ main = withImageSurface FormatRGB24 300 300 $ \surface -> do
     renderWith surface pic
     surfaceWriteToPNG surface "/tmp/foo.png"
 
+main2 = withSVGSurface "/tmp/foo.svg" 300 300 $ \surface -> do
+    renderWith surface pic
+
 type Point  = (Double, Double)
 type Vector = (Double, Double)
 
