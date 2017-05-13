@@ -129,3 +129,6 @@ pic = do
   drawKernel3x3 kernel
 
   drawArc (Arc (squareCentre s) (kernelCentre kernel) 0.5)
+
+  uncurry moveTo (midpoint (squareCentre s) (kernelCentre kernel))
+  showText "T∘Φ"
