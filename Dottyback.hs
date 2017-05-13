@@ -7,42 +7,44 @@ main = withImageSurface FormatRGB24 300 300 $ \surface -> do
     renderWith surface pic
     surfaceWriteToPNG surface "/tmp/foo.png"
 
+type Point = (Double, Double)
+
 data Square = Square
-  { topLeft     :: (Double, Double)
-  , bottomRight :: (Double, Double)
+  { topLeft     :: Point
+  , bottomRight :: Point
   }
 
 data GPlane = GPlane
-  { center      :: (Double, Double)
+  { center      :: Point
   , hubDistance :: Double
   , planeRadius :: Double
   }
 
 data Kernel3x3 = Kernel3x3
-  { kernel3x3TopLeft     :: (Double, Double)
-  , kernel3x3BottomRight :: (Double, Double)
+  { kernel3x3TopLeft     :: Point
+  , kernel3x3BottomRight :: Point
   }
 
 data Arc = Arc
-  { arcFrom      :: (Double, Double)
-  , arcTo        :: (Double, Double)
+  { arcFrom      :: Point
+  , arcTo        :: Point
   , arcCurvature :: Double
   }
 
-midpoint :: (Double, Double) -> (Double, Double) -> (Double, Double)
+midpoint :: Point -> Point -> Point
 midpoint (x1, y1) (x2, y2) = ((x1 + x2) / 2, (y1 + y2) / 2)
 
-squareCentre :: Square -> (Double, Double)
+squareCentre :: Square -> Point
 squareCentre s = midpoint (topLeft s) (bottomRight s)
 
-kernelCentre :: Kernel3x3 -> (Double, Double)
+kernelCentre :: Kernel3x3 -> Point
 kernelCentre k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
 
-squareCenterRadius :: (Double, Double) -> Double -> Square
+squareCenterRadius :: Point -> Double -> Square
 squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r)
   where d = r / 2
 
-kernel3x3CenterRadius :: (Double, Double) -> Double -> Kernel3x3
+kernel3x3CenterRadius :: Point -> Double -> Kernel3x3
 kernel3x3CenterRadius (cx, cy) r = Kernel3x3 (cx - r, cy - r) (cx + r, cy + r)
   where d = r / 2 
 
