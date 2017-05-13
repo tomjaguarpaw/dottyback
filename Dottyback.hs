@@ -75,7 +75,7 @@ drawArc (Arc p1 p2 c) = do
   if c == 0 then
     do uncurry moveTo p1
        uncurry lineTo p2
-  else arc cx cy radius theta1 theta2
+  else uncurry arc cv radius theta1 theta2
   stroke
   where mid      = midpoint p1 p2
         d        = p2 .- p1
@@ -83,9 +83,9 @@ drawArc (Arc p1 p2 c) = do
         radius   = r / 2 * (1 / c + c)
         tr       = radius - c * r
         dc       = (1 / 2 * tr / r) .* rotate90 d
-        (cx, cy) = mid .+ dc
-        theta1   = angle (p1 .- (cx, cy))
-        theta2   = angle (p2 .- (cx, cy))
+        cv       = mid .+ dc
+        theta1   = angle (p1 .- cv)
+        theta2   = angle (p2 .- cv)
 
 modulus :: Vector -> Double
 modulus (x, y) = sqrt (x * x + y * y)
