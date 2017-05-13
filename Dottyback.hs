@@ -4,10 +4,10 @@ import Graphics.Rendering.Cairo
 
 
 height_ :: Num a => a
-height_ = 300
+height_ = 800
 
 width_  :: Num a => a
-width_  = 600
+width_  = 1280
 
 main = withImageSurface FormatRGB24 width_ height_ $ \surface -> do
     renderWith surface pic
@@ -19,6 +19,17 @@ main2 = withSVGSurface "/tmp/foo.svg" width_ height_ $ \surface -> do
 type Point  = (Double, Double)
 type Vector = (Double, Double)
 type Length = Double
+
+data Text = Text
+  { tStart  :: Point
+  , tText   :: String
+  , tSize   :: Length
+  }
+
+drawText :: Text -> Render ()
+drawText t = do uncurry moveTo (tStart t)
+                setFontSize (tSize t)
+                showText (tText t)
 
 data LineSegment = LineSegment
   { lsStart :: Point
@@ -251,22 +262,7 @@ pic = do
   setSourceRGB 0 0 0
   setLineWidth 1
   
-  let gPlane = GPlane (100, 50) 30 5
-      kernel = kernel3x3CenterRadius (200, 200) 15
-
-      (_, _, _, s) = gPlane4Squares gPlane
-
-  drawSquare (squareCenterRadius (20, 20) 5)
-  drawGPlane gPlane
-  drawKernel3x3 kernel
-  drawGPlane (gPlaneCenterRadius (75, 200) 50)
-
-  drawArc (Arc (squareCentre s) (kernelCentre kernel) 0.5)
-
-  uncurry moveTo (midpoint (squareCentre s) (kernelCentre kernel))
-  showText "T∘Φ"
-
-  let boundingBox = Rectangle (280, 0) (600, 200)
+  let boundingBox = Rectangle (0, 0) (width_, height_)
       gPlane2     = gPlaneCenterRadius (0.7 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 3.5)
       square      = squareCenterRadius (0.15 `along` horizMidline boundingBox)
@@ -282,6 +278,10 @@ pic = do
                         (squareCentre pixel)
                         0.3
 
+      label       = Text (midpoint (arcFrom arc) (arcTo arc))
+                         "T∘Φ"
+                         (height_ / 20)
+
 
   drawGPlane         gPlane2
   drawRectangle      boundingBox
@@ -289,3 +289,4 @@ pic = do
   drawKernelOriented kernelO
   drawSquare         pixel
   drawArc            arc
+  drawText           label
