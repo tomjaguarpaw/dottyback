@@ -7,7 +7,8 @@ main = withImageSurface FormatRGB24 300 300 $ \surface -> do
     renderWith surface pic
     surfaceWriteToPNG surface "/tmp/foo.png"
 
-type Point = (Double, Double)
+type Point  = (Double, Double)
+type Vector = (Double, Double)
 
 data Square = Square
   { topLeft     :: Point
@@ -70,21 +71,42 @@ drawGPlane g = mapM_ drawSquare [a, b, c, d]
   where (a, b, c, d) = gPlane4Squares g
 
 drawArc :: Arc -> Render ()
-drawArc (Arc (x1, y1) (x2, y2) c) = do
+drawArc (Arc p1 p2 c) = do
   if c == 0 then
-    do moveTo x1 y1
-       lineTo x2 y2
+    do uncurry moveTo p1
+       uncurry lineTo p2
   else arc cx cy radius theta1 theta2
   stroke
-  where (midx, midy) = midpoint (x1, y1) (x2, y2)
-        dx       = x2 - x1
-        dy       = y2 - y1
-        r        = sqrt (dx * dx + dy * dy) / 2
+  where mid      = midpoint p1 p2
+        d        = p2 .- p1
+        r        = modulus d / 2
         radius   = r / 2 * (1 / c + c)
         tr       = radius - c * r
-        (cx, cy) = (midx - dy / 2 * tr / r, midy + dx / 2 * tr / r)
-        theta1   = atan2 (y1 - cy) (x1 - cx)
-        theta2   = atan2 (y2 - cy) (x2 - cx)
+        dc       = (1 / 2 * tr / r) .* rotate90 d
+        (cx, cy) = mid .+ dc
+        theta1   = angle (p1 .- (cx, cy))
+        theta2   = angle (p2 .- (cx, cy))
+
+modulus :: Vector -> Double
+modulus (x, y) = sqrt (x * x + y * y)
+
+(.*) :: Double -> Vector -> Vector
+(.*) k (x, y) = (k * x, k * y)
+
+(./) :: Double -> Vector -> Vector
+(./) k (x, y) = (k / x, k / y)
+
+(.-) :: Point -> Point -> Vector
+(.-) (x1, y1) (x2, y2) = (x1 - x2, y1 - y2)
+
+(.+) :: Point -> Vector -> Point
+(.+) (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+
+rotate90 :: Vector -> Vector
+rotate90 (x, y) = (-y, x)
+
+angle :: Vector -> Double
+angle (x, y) = atan2 y x
 
 kernel3x39Squares :: Kernel3x3 -> ( (Square, Square, Square)
                                   , (Square, Square, Square)
