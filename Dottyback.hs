@@ -3,19 +3,69 @@ module Dottyback where
 import Graphics.Rendering.Cairo
 
 
-main = withImageSurface FormatRGB24 300 300 $ \surface -> do
+height_ :: Num a => a
+height_ = 300
+
+width_  :: Num a => a
+width_  = 600
+
+main = withImageSurface FormatRGB24 width_ height_ $ \surface -> do
     renderWith surface pic
     surfaceWriteToPNG surface "/tmp/foo.png"
 
-main2 = withSVGSurface "/tmp/foo.svg" 300 300 $ \surface -> do
+main2 = withSVGSurface "/tmp/foo.svg" width_ height_ $ \surface -> do
     renderWith surface pic
 
 type Point  = (Double, Double)
 type Vector = (Double, Double)
+type Length = Double
+
+data LineSegment = LineSegment
+  { lsStart :: Point
+  , lsEnd   :: Point
+  }
+
+along :: Double -> LineSegment -> Point
+along d l = lsStart l .+ (d .* (lsEnd l .- lsStart l))
+
+lLength :: LineSegment -> Double
+lLength l = modulus (lsStart l .- lsEnd l)
+
+data Rectangle = Rectangle
+  { rTopLeft     :: Point
+  , rBottomRight :: Point
+  }
+
+horizMidline :: Rectangle -> LineSegment
+horizMidline r = LineSegment (midpoint (rTopLeft  r) (rBottomLeft  r))
+                             (midpoint (rTopRight r) (rBottomRight r))
+
+withinSquare :: (Double, Double) -> Square -> Point
+withinSquare (x, y) (Square (x1, y1) (x2, y2) _) =
+  (x1 + (x2 - x1) * x, y1 + (y2 - y1) * y)
+
+rTopRight :: Rectangle -> Point
+rTopRight (Rectangle (_, y1) (x2, _)) = (x2, y1)
+
+rBottomLeft :: Rectangle -> Point
+rBottomLeft (Rectangle (x1, _) (_, y2)) = (x1, y2)
+
+rightHalf :: Rectangle -> Rectangle
+rightHalf r = Rectangle (midpoint (rTopLeft r) (rTopRight r)) (rBottomRight r)
+
+rCenter :: Rectangle -> Point
+rCenter r = midpoint (rTopLeft r) (rBottomRight r)
+
+rHeight :: Rectangle -> Length
+rHeight (Rectangle (_, y1) (_, y2)) = y2 - y1
+
+sLength :: Square -> Length
+sLength (Square (_, y1) (_, y2) _) = y2 - y1
 
 data Square = Square
   { topLeft     :: Point
   , bottomRight :: Point
+  , color       :: (Double, Double, Double)
   }
 
 data GPlane = GPlane
@@ -28,6 +78,38 @@ data Kernel3x3 = Kernel3x3
   { kernel3x3TopLeft     :: Point
   , kernel3x3BottomRight :: Point
   }
+
+data Orientation = N | E | S | W
+
+data KernelOriented = KernelOriented
+  { koCenter      :: Point
+  , koRadius      :: Length
+  , koOrientation :: Orientation
+  }
+
+drawKernelOriented :: KernelOriented -> Render ()
+drawKernelOriented k = mapM_ drawSquare squares
+  where colours = [ [ y, y, y ]
+                  , [ y, w, w ]
+                  , [ g, g, w ] ]
+        y = (0.8, 0.8, 0.8)
+        g = (0.3, 0.3, 0.3)
+        w = (1, 1, 1)
+
+        squares = do x <- [-1 .. 1]
+                     y <- [-1 .. 1]
+
+                     let (x', y') = case koOrientation k of
+                           N -> (x, y)
+                           E -> (-y, x)
+                           S -> (-x, -y)
+                           W -> (y, -x)
+
+                     return (squareCenterRadiusColor
+                          (koCenter k .+ ( fromIntegral x * koRadius k / 3 * 2
+                                         , fromIntegral y * koRadius k / 3 * 2))
+                          (koRadius k / 3)
+                          (colours !! (x + 1) !! (y + 1)))
 
 data Arc = Arc
   { arcFrom      :: Point
@@ -45,15 +127,40 @@ kernelCentre :: Kernel3x3 -> Point
 kernelCentre k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
 
 squareCenterRadius :: Point -> Double -> Square
-squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r)
+squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r) (1,1,1)
+  where d = r / 2
+
+squareCenterRadiusColor :: Point -> Double -> (Double, Double, Double) -> Square
+squareCenterRadiusColor (cx, cy) r c =
+  Square (cx - r, cy - r) (cx + r, cy + r) c
   where d = r / 2
 
 kernel3x3CenterRadius :: Point -> Double -> Kernel3x3
 kernel3x3CenterRadius (cx, cy) r = Kernel3x3 (cx - r, cy - r) (cx + r, cy + r)
   where d = r / 2 
 
+gPlaneCenterRadius :: Point -> Double -> GPlane
+gPlaneCenterRadius p r = GPlane p r (r / 2.5)
+
+gPlaneTop :: GPlane -> Square
+gPlaneTop g = t
+  where (_, _, t, _) = gPlane4Squares g
+
 drawSquare :: Square -> Render ()
-drawSquare (Square (x1, y1) (x2, y2)) = do
+drawSquare (Square (x1, y1) (x2, y2) (c1, c2, c3)) = do
+  moveTo x1 y1
+  lineTo x2 y1
+  lineTo x2 y2
+  lineTo x1 y2
+  closePath
+  setFillRule FillRuleWinding
+  setSourceRGB c1 c2 c3
+  fillPreserve
+  setSourceRGB 0 0 0
+  stroke
+
+drawRectangle :: Rectangle -> Render ()
+drawRectangle (Rectangle (x1, y1) (x2, y2)) = do
   moveTo x1 y1
   lineTo x2 y1
   lineTo x2 y2
@@ -137,7 +244,7 @@ drawKernel3x3 k = mapM_ draw3Squares [a, b, c]
 pic :: Render ()
 pic = do
   setSourceRGB 1 1 1
-  rectangle 0 0 300 300
+  rectangle 0 0 width_ height_
   fill
   
 
@@ -152,8 +259,33 @@ pic = do
   drawSquare (squareCenterRadius (20, 20) 5)
   drawGPlane gPlane
   drawKernel3x3 kernel
+  drawGPlane (gPlaneCenterRadius (75, 200) 50)
 
   drawArc (Arc (squareCentre s) (kernelCentre kernel) 0.5)
 
   uncurry moveTo (midpoint (squareCentre s) (kernelCentre kernel))
   showText "T∘Φ"
+
+  let boundingBox = Rectangle (280, 0) (600, 200)
+      gPlane2     = gPlaneCenterRadius (0.7 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 3.5)
+      square      = squareCenterRadius (0.15 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 3.5 / 2.5)
+      kernelO     = KernelOriented ((0.3, 0.3) `withinSquare` square)
+                                   (0.2 * sLength square)
+                                   N
+      pixel       = squareCenterRadius ((0.3, 0.3)
+                                        `withinSquare`
+                                        gPlaneTop gPlane2)
+                                       (0.2 / 3 * sLength square)
+      arc         = Arc (koCenter kernelO)
+                        (squareCentre pixel)
+                        0.3
+
+
+  drawGPlane         gPlane2
+  drawRectangle      boundingBox
+  drawSquare         square
+  drawKernelOriented kernelO
+  drawSquare         pixel
+  drawArc            arc
