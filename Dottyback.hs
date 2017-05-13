@@ -55,7 +55,7 @@ drawSquare (Square (x1, y1) (x2, y2)) = do
   lineTo x2 y1
   lineTo x2 y2
   lineTo x1 y2
-  lineTo x1 y1
+  closePath
   stroke
 
 gPlane4Squares :: GPlane -> (Square, Square, Square, Square)
