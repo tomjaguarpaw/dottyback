@@ -21,7 +21,9 @@ renderSVG f w h p = withSVGSurface f w h $ \surface -> do
 main :: IO ()
 main = do
   let images = [ (pic, "/tmp/foo")
-               , (image1, "/tmp/image1") ]
+               , (image1, "/tmp/image1")
+               , (image3, "/tmp/image3")
+               ]
 
   flip mapM_ images $ \(p, f) -> do
     renderPNG (f ++ ".png") width_ height_ p
@@ -343,3 +345,41 @@ image1 = do
   drawSquare         pixel2
   drawArc            arc1
   drawArc            arc2
+
+image3 :: Render ()
+image3 = do
+  setSourceRGB 1 1 1
+  rectangle 0 0 width_ height_
+  fill
+
+  setSourceRGB 0 0 0
+  setLineWidth 1
+
+  let boundingBox = Rectangle (0, 0) (width_, height_)
+      square1     = squareCenterRadiusColor
+                       (0.25 `along` horizMidline boundingBox)
+                       (rHeight boundingBox / 4)
+                       (0.2, 0.2, 0.2)
+
+      square2     = squareCenterRadiusColor
+                       (0.75 `along` horizMidline boundingBox)
+                       (rHeight boundingBox / 4)
+                       (0.2, 0.2, 0.2)
+
+      kernel1     = KernelOriented ((0.3, 0.3) `withinSquare` square2)
+                                   (0.15 * sLength square2)
+                                   S
+
+      pixel1      = squareCenterRadiusColor
+                       ((0.3, 0.3) `withinSquare` square1)
+                       (koPixelRadius kernel1)
+                       (1, 1, 1)
+
+      arc1        = Arc (squareCenter pixel1) (koCenter kernel1) (0.3)
+
+  drawSquare         square1
+  drawSquare         square2
+  drawKernelOriented kernel1
+  drawSquare         pixel1
+  drawArc            arc1
+  
