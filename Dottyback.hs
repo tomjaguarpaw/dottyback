@@ -461,6 +461,12 @@ image2 = do
       sSE = thisSquare (0.7, 0.8)
       sSW = thisSquare (0.3, 0.8)
 
+      i1 = Rectangle (koCenter kernel1 .+ (koRadius kernel1 .* (-0.5, -1.7)))
+                     (koCenter kernel1 .+ (koRadius kernel1 .* (1.2, 1.5)))
+
+      i2 = Rectangle (koCenter kernel2 .+ (koRadius kernel2 .* (-0.5, -1.7)))
+                     (koCenter kernel2 .+ (koRadius kernel2 .* (1.2, 1.5)))
+
       kernel1 = kernelOriented ((0.2, 0.3) `withinSquare` sNW)
                                (0.15 * sLength sNW)
                                N
@@ -480,6 +486,7 @@ image2 = do
 
   mapM_ drawSquare [sNW, sNE, sSE, sSW]
   mapM_ drawSquare [pixel1, pixel2]
+  mapM_ drawRectangle [i1, i2]
   mapM_ drawKernelOriented [kernel1, kernel2]
   mapM_ drawArc    [arc1, arc2]
 
