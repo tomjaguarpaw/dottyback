@@ -23,6 +23,7 @@ main = do
   let images = [ (pic, "/tmp/foo")
                , (image1, "/tmp/image1")
                , (image3, "/tmp/image3")
+               , (image5, "/tmp/image5")
                ]
 
   flip mapM_ images $ \(p, f) -> do
@@ -170,6 +171,12 @@ gPlaneTop :: GPlane -> Square
 gPlaneTop g = t
   where (_, _, t, _) = gPlane4Squares g
 
+data F = F
+  { fCenter :: Point
+  , fUp     :: Vector
+  , fColor  :: (Double, Double, Double)
+  }
+
 drawSquare :: Square -> Render ()
 drawSquare (Square (x1, y1) (x2, y2) (c1, c2, c3)) = do
   moveTo x1 y1
@@ -221,6 +228,41 @@ drawArc (Arc p1 p2 c) = do
         theta1   = angle (p1 .- cv)
         theta2   = angle (p2 .- cv)
 
+drawF :: F -> Render ()
+drawF f = do
+  uncurry moveTo (head fPathShrunk)
+  mapM_ (uncurry lineTo) (tail fPathShrunk)
+  closePath
+  setFillRule FillRuleWinding
+  setSourceRGB c1 c2 c3
+  fillPreserve
+  setSourceRGB 0 0 0
+  stroke
+  where fPath  = [ (0, 0)
+                 , (3, 0)
+                 , (3, 1)
+                 , (1, 1)
+                 , (1, 2)
+                 , (2, 2)
+                 , (2, 3)
+                 , (1, 3)
+                 , (1, 5)
+                 , (0, 5)
+                 ]
+        fPathShrunk = map ((.+ fCenter f)
+                           .
+                           (\(x, y) -> (tx1 * x + tx2 * y,
+                                       ty1 * x + ty2 * y))
+                           .
+                           (\(x, y) -> (x - 3 / 5, y - 1))
+                           .
+                           (\(x, y) -> (x * 2 / 5, y * 2 / 5)))
+                      fPath
+        r = fUp f
+        (tx2, ty2) = r
+        (tx1, ty1) = (ty2, -tx2)
+        (c1, c2, c3) = fColor f
+
 modulus :: Vector -> Double
 modulus (x, y) = sqrt (x * x + y * y)
 
@@ -265,16 +307,19 @@ drawKernel3x3 k = mapM_ draw3Squares [a, b, c]
   where (a, b, c) = kernel3x39Squares k
         draw3Squares (d, e, f) = mapM_ drawSquare [d, e, f]
 
-pic :: Render ()
-pic = do
+initR :: Render ()
+initR = do
   setSourceRGB 1 1 1
   rectangle 0 0 width_ height_
   fill
-  
 
   setSourceRGB 0 0 0
   setLineWidth 1
-  
+
+pic :: Render ()
+pic = do
+  initR
+
   let boundingBox = Rectangle (0, 0) (width_, height_)
       gPlane2     = gPlaneCenterRadius (0.7 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 3.5)
@@ -306,13 +351,8 @@ pic = do
 
 image1 :: Render ()
 image1 = do
-  setSourceRGB 1 1 1
-  rectangle 0 0 width_ height_
-  fill
-
-  setSourceRGB 0 0 0
-  setLineWidth 1
-
+  initR
+  
   let boundingBox = Rectangle (0, 0) (width_, height_)
       square1     = squareCenterRadius (0.25 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 4)
@@ -348,12 +388,7 @@ image1 = do
 
 image3 :: Render ()
 image3 = do
-  setSourceRGB 1 1 1
-  rectangle 0 0 width_ height_
-  fill
-
-  setSourceRGB 0 0 0
-  setLineWidth 1
+  initR
 
   let boundingBox = Rectangle (0, 0) (width_, height_)
       square1     = squareCenterRadiusColor
@@ -383,3 +418,11 @@ image3 = do
   drawSquare         pixel1
   drawArc            arc1
   
+image5 :: Render ()
+image5 = do
+  initR
+
+  let boundingBox = Rectangle (0, 0) (width_, height_)
+      f           = F ((rCenter boundingBox) .+ (100, 100)) (0, 100) (1, 0, 0)
+
+  drawF f
