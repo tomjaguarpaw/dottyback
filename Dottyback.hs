@@ -295,6 +295,9 @@ modulus (x, y) = sqrt (x * x + y * y)
 rotate90 :: Vector -> Vector
 rotate90 (x, y) = (-y, x)
 
+rotate270 :: Vector -> Vector
+rotate270 = rotate90 . rotate90 . rotate90
+
 angle :: Vector -> Double
 angle (x, y) = atan2 y x
 
@@ -438,16 +441,25 @@ image5 = do
 
   let boundingBox = Rectangle (0, 0) (width_, height_)
 
-      gPlane      = gPlaneCenterRadius (rCenter boundingBox)
-                                       (rHeight boundingBox / 3.5)
+      gPlane1     = gPlaneCenterRadius (0.25 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 5)
 
-      (l, r, t, b) = gPlane4Squares gPlane
+      gPlane2     = gPlaneCenterRadius (0.75 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 5)
 
-      fHeight      = sCenterToTop l ./ 2
+
+      (l1, r1, t1, b1) = gPlane4Squares gPlane1
+      (l2, r2, t2, b2) = gPlane4Squares gPlane2
+
+      fHeight      = sCenterToTop l1 ./ 2
 
       f x          = FShadow (F (squareCenter x) fHeight (1, 0, 0))
-                             ((squareCenter x .- center gPlane) ./ 25)
+                             ((squareCenter x .- center gPlane1) ./ 25)
+
+      g x          = FShadow (F (squareCenter x) (rotate270 fHeight) (1, 0, 0))
+                             ((squareCenter x .- center gPlane2) ./ 25)
 
 
-  drawGPlane gPlane
-  mapM_ drawFShadow (map f [l, r, t, b])
+  mapM_ drawGPlane [gPlane1, gPlane2]
+  mapM_ drawFShadow (map f [l1, r1, t1, b1])
+  mapM_ drawFShadow (map g [l2, r2, t2, b2])
