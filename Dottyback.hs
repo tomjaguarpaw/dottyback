@@ -2,6 +2,14 @@ module Dottyback where
 
 import Graphics.Rendering.Cairo hiding (x, y)
 
+{- TODO
+
+Image 2
+Image 4
+Image 5: R arrow
+Image 6, 6a: T arrow
+
+-}
 
 height_ :: Num a => a
 height_ = 800
