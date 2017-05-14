@@ -548,54 +548,36 @@ image8 o = do
       gPlane2 = gPlaneCenterRadius (0.75 `along` horizMidline boundingBox)
                (rHeight boundingBox / 5)
 
-      (l, r, t, b) = gPlane4Squares gPlane2
-
-      (l1, r1, t1, b1) = gPlane4Squares gPlane1
-
-      pixelSquare = case o of
-        N -> t
-        E -> r
-        S -> b
-        W -> l
+      pixelSquare = gPlane1Square gPlane2 o
 
       y = (0.8, 0.8, 0.8)
       g = (0.3, 0.3, 0.3)
       w = (1, 1, 1)
 
-      kernelOl    = KernelOriented ((0.3, 0.3) `withinSquare`p)
-                                   (0.2 * sLength p)
-                                   o
-                                   [ [ y, y, y ]
-                                   , [ y, w, w ]
-                                   , [ g, g, w ] ]
-        where p = gPlane1Square gPlane1 (oAdd o N)
-  
+      kernel o' colours =
+        KernelOriented ((0.3, 0.3) `withinSquare`p)
+                       (0.2 * sLength p)
+                       o
+                       colours
+        where p = gPlane1Square gPlane1 (oAdd o o')
 
-      kernelOr    = KernelOriented ((0.3, 0.3) `withinSquare` p)
-                                   (0.2 * sLength p)
-                                   o
-                                   [ [ w, w, w ]
-                                   , [ y, g, g ]
-                                   , [ w, w, w ] ]
-        where p = gPlane1Square gPlane1 (oAdd o E)
+      kernels = [kernelOl, kernelOr, kernelOt, kernelOb]
 
+      kernelOl    = kernel N [ [ y, y, y ]
+                             , [ y, w, w ]
+                             , [ g, g, w ] ]
 
-      kernelOt    = KernelOriented ((0.3, 0.3) `withinSquare` p)
-                                   (0.2 * sLength p)
-                                   o
-                                   [ [ g, w, w ]
-                                   , [ y, g, g ]
-                                   , [ w, w, y ] ]
-        where p = gPlane1Square gPlane1 (oAdd o S)
+      kernelOr    = kernel E [ [ w, w, w ]
+                             , [ y, g, g ]
+                             , [ w, w, w ] ]
 
+      kernelOt    = kernel S [ [ g, w, w ]
+                             , [ y, g, g ]
+                             , [ w, w, y ] ]
 
-      kernelOb    = KernelOriented ((0.3, 0.3) `withinSquare` p)
-                                   (0.2 * sLength p)
-                                   o
-                                   [ [ y, w, y ]
-                                   , [ w, g, w ]
-                                   , [ g, g, g ] ]
-        where p = gPlane1Square gPlane1 (oAdd o W)
+      kernelOb    = kernel W [ [ y, w, y ]
+                             , [ w, g, w ]
+                             , [ g, g, g ] ]
 
       pixel       = squareCenterRadius ((0.3, 0.3)
                                         `withinSquare`
@@ -603,13 +585,12 @@ image8 o = do
                                        (0.2 / 3 * sLength pixelSquare)
 
       arcs = map (\x -> Arc (koCenter x) (squareCenter pixel) 0.4)
-                 [kernelOl, kernelOr, kernelOt, kernelOb]
-
+                 kernels
 
   drawGPlane         gPlane1
   drawGPlane         gPlane2
   drawRectangle      boundingBox
-  mapM_ drawKernelOriented [kernelOl, kernelOr, kernelOt, kernelOb]
+  mapM_ drawKernelOriented kernels
   drawSquare         pixel
   mapM_ drawArc      arcs
 
