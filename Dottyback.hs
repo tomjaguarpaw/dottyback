@@ -9,6 +9,9 @@ height_ = 800
 width_  :: Num a => a
 width_  = 1280
 
+boundingBox :: Rectangle
+boundingBox = Rectangle (0, 0) (width_, height_)
+
 renderPNG :: FilePath -> Int -> Int -> Render a -> IO ()
 renderPNG f w h p = withImageSurface FormatRGB24 w h $ \surface -> do
     _ <- renderWith surface p
@@ -339,8 +342,7 @@ pic :: Render ()
 pic = do
   initR
 
-  let boundingBox = Rectangle (0, 0) (width_, height_)
-      gPlane2     = gPlaneCenterRadius (0.7 `along` horizMidline boundingBox)
+  let gPlane2     = gPlaneCenterRadius (0.7 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 3.5)
       square      = squareCenterRadius (0.15 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 3.5 / 2.5)
@@ -372,8 +374,7 @@ image1 :: Render ()
 image1 = do
   initR
   
-  let boundingBox = Rectangle (0, 0) (width_, height_)
-      square1     = squareCenterRadius (0.25 `along` horizMidline boundingBox)
+  let square1     = squareCenterRadius (0.25 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 4)
 
       square2     = squareCenterRadius (0.75 `along` horizMidline boundingBox)
@@ -409,8 +410,7 @@ image3 :: Render ()
 image3 = do
   initR
 
-  let boundingBox = Rectangle (0, 0) (width_, height_)
-      square1     = squareCenterRadiusColor
+  let square1     = squareCenterRadiusColor
                        (0.25 `along` horizMidline boundingBox)
                        (rHeight boundingBox / 4)
                        (0.2, 0.2, 0.2)
@@ -441,9 +441,7 @@ imageG :: (Vector -> Vector) -> (Vector -> Vector) -> Render ()
 imageG tt ff = do
   initR
 
-  let boundingBox = Rectangle (0, 0) (width_, height_)
-
-      gPlane1     = gPlaneCenterRadius (0.25 `along` horizMidline boundingBox)
+  let gPlane1     = gPlaneCenterRadius (0.25 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 5)
 
       gPlane2     = gPlaneCenterRadius (0.75 `along` horizMidline boundingBox)
