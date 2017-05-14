@@ -9,14 +9,19 @@ height_ = 800
 width_  :: Num a => a
 width_  = 1280
 
-main :: IO ()
-main = withImageSurface FormatRGB24 width_ height_ $ \surface -> do
-    renderWith surface pic
-    surfaceWriteToPNG surface "/tmp/foo.png"
+renderPNG :: FilePath -> Int -> Int -> Render a -> IO ()
+renderPNG f w h p = withImageSurface FormatRGB24 w h $ \surface -> do
+    _ <- renderWith surface p
+    surfaceWriteToPNG surface f
 
-main2 :: IO ()
-main2 = withSVGSurface "/tmp/foo.svg" width_ height_ $ \surface -> do
-    renderWith surface pic
+renderSVG :: FilePath -> Double -> Double -> Render a -> IO a
+renderSVG f w h p = withSVGSurface f w h $ \surface -> do
+    renderWith surface p
+
+main :: IO ()
+main = do
+  renderPNG "/tmp/foo.png" width_ height_ pic
+  renderSVG "/tmp/foo.png" width_ height_ pic
 
 type Point  = (Double, Double)
 type Vector = (Double, Double)
