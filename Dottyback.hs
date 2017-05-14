@@ -186,8 +186,8 @@ sCenterToTop :: Square -> Vector
 sCenterToTop s = (0, y)
   where (_, y) = (topLeft s .- bottomRight s) ./ 2
 
-kernelCentre :: Kernel3x3 -> Point
-kernelCentre k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
+kernelCenter :: Kernel3x3 -> Point
+kernelCenter k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
 
 koPixelRadius :: KernelOriented -> Length
 koPixelRadius k = koRadius k / 3
