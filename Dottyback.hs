@@ -223,11 +223,11 @@ drawRectangle (Rectangle (x1, y1) (x2, y2)) = do
   stroke
 
 gPlane4Squares :: GPlane -> (Square, Square, Square, Square)
-gPlane4Squares (GPlane (cx, cy) h r) =
-  ( squareCenterRadius (cx - h, cy) r
-  , squareCenterRadius (cx + h, cy) r
-  , squareCenterRadius (cx, cy - h) r
-  , squareCenterRadius (cx, cy + h) r
+gPlane4Squares g =
+  ( gPlane1Square g W
+  , gPlane1Square g E
+  , gPlane1Square g N
+  , gPlane1Square g S
   )
 
 gPlane1Square :: GPlane -> Orientation -> Square
