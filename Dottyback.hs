@@ -196,6 +196,9 @@ koPixelRadius k = koRadius k / 3
 kPixelRadius :: Kernel3x3 -> Length
 kPixelRadius k = (fst (kernel3x3BottomRight k) - fst (kernel3x3TopLeft k)) / 6
 
+kRadius :: Kernel3x3 -> Length
+kRadius = (* 3) . kPixelRadius
+
 squareCenterRadius :: Point -> Double -> Square
 squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r) (1,1,1)
 
