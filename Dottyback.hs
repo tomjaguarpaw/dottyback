@@ -148,6 +148,10 @@ midpoint (x1, y1) (x2, y2) = ((x1 + x2) / 2, (y1 + y2) / 2)
 squareCenter :: Square -> Point
 squareCenter s = midpoint (topLeft s) (bottomRight s)
 
+sCenterToTop :: Square -> Vector
+sCenterToTop s = (0, y)
+  where (_, y) = (topLeft s .- bottomRight s) ./ 2
+
 kernelCentre :: Kernel3x3 -> Point
 kernelCentre k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
 
@@ -264,7 +268,7 @@ drawF f = do
                            (\(x, y) -> (x * 2 / 5, y * 2 / 5)))
                       fPath
         r = fUp f
-        (tx2, ty2) = r
+        (tx2, ty2) = (0, 0) .- r
         (tx1, ty1) = (ty2, -tx2)
         (c1, c2, c3) = fColor f
 
@@ -433,6 +437,17 @@ image5 = do
   initR
 
   let boundingBox = Rectangle (0, 0) (width_, height_)
-      f           = FShadow (F ((rCenter boundingBox) .+ (100, 100)) (0, 100) (1, 0, 0)) (15, 0)
 
-  drawFShadow f
+      gPlane      = gPlaneCenterRadius (rCenter boundingBox)
+                                       (rHeight boundingBox / 3.5)
+
+      (l, r, t, b) = gPlane4Squares gPlane
+
+      fHeight      = sCenterToTop l ./ 2
+
+      f x          = FShadow (F (squareCenter x) fHeight (1, 0, 0))
+                             ((squareCenter x .- center gPlane) ./ 25)
+
+
+  drawGPlane gPlane
+  mapM_ drawFShadow (map f [l, r, t, b])
