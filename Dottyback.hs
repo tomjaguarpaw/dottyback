@@ -279,8 +279,8 @@ modulus (x, y) = sqrt (x * x + y * y)
 (.*) :: Double -> Vector -> Vector
 (.*) k (x, y) = (k * x, k * y)
 
-(./) :: Double -> Vector -> Vector
-(./) k (x, y) = (k / x, k / y)
+(./) :: Vector -> Double -> Vector
+(./) (x, y) k = (x / k, y / k)
 
 (.-) :: Point -> Point -> Vector
 (.-) (x1, y1) (x2, y2) = (x1 - x2, y1 - y2)
