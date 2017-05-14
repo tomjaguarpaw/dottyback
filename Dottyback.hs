@@ -119,18 +119,21 @@ data KernelOriented = KernelOriented
   { koCenter      :: Point
   , koRadius      :: Length
   , koOrientation :: Orientation
+  , koData        :: [[(Double, Double, Double)]]
   }
 
-drawKernelOriented :: KernelOriented -> Render ()
-drawKernelOriented k = mapM_ drawSquare squares
+kernelOriented :: Point -> Length -> Orientation -> KernelOriented
+kernelOriented c r o = KernelOriented c r o colours
   where colours = [ [ y, y, y ]
                   , [ y, w, w ]
                   , [ g, g, w ] ]
-          where y = (0.8, 0.8, 0.8)
-                g = (0.3, 0.3, 0.3)
-                w = (1, 1, 1)
+        y = (0.8, 0.8, 0.8)
+        g = (0.3, 0.3, 0.3)
+        w = (1, 1, 1)
 
-        squares = do x <- [-1 .. 1]
+drawKernelOriented :: KernelOriented -> Render ()
+drawKernelOriented k = mapM_ drawSquare squares
+  where squares = do x <- [-1 .. 1]
                      y <- [-1 .. 1]
 
                      let (x', y') = case koOrientation k of
@@ -144,6 +147,7 @@ drawKernelOriented k = mapM_ drawSquare squares
                                          , fromIntegral y * koRadius k / 3 * 2))
                           (koRadius k / 3)
                           (colours !! (x' + 1) !! (y' + 1)))
+          where colours = koData k
 
 data Arc = Arc
   { arcFrom      :: Point
@@ -350,7 +354,7 @@ pic = do
                                        (rHeight boundingBox / 3.5)
       square      = squareCenterRadius (0.15 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 3.5 / 2.5)
-      kernelO     = KernelOriented ((0.3, 0.3) `withinSquare` square)
+      kernelO     = kernelOriented ((0.3, 0.3) `withinSquare` square)
                                    (0.2 * sLength square)
                                    N
       pixel       = squareCenterRadius ((0.3, 0.3)
@@ -384,10 +388,10 @@ image1 = do
       square2     = squareCenterRadius (0.75 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 4)
 
-      kernel1     = KernelOriented ((0.3, 0.3) `withinSquare` square1)
+      kernel1     = kernelOriented ((0.3, 0.3) `withinSquare` square1)
                                    (0.15 * sLength square1)
                                    N
-      kernel2     = KernelOriented ((0.6, 0.7) `withinSquare` square1)
+      kernel2     = kernelOriented ((0.6, 0.7) `withinSquare` square1)
                                    (0.15 * sLength square1)
                                    N
 
@@ -424,7 +428,7 @@ image3 = do
                        (rHeight boundingBox / 4)
                        (0.2, 0.2, 0.2)
 
-      kernel1     = KernelOriented ((0.3, 0.3) `withinSquare` square2)
+      kernel1     = kernelOriented ((0.3, 0.3) `withinSquare` square2)
                                    (0.15 * sLength square2)
                                    S
 
@@ -500,7 +504,7 @@ image7 o = do
 
       square      = squareCenterRadius (0.15 `along` horizMidline boundingBox)
                                        (rHeight boundingBox / 3.5 / 2.5)
-      kernelO     = KernelOriented ((0.3, 0.3) `withinSquare` square)
+      kernelO     = kernelOriented ((0.3, 0.3) `withinSquare` square)
                                    (0.2 * sLength square)
                                    o
       pixel       = squareCenterRadius ((0.3, 0.3)
