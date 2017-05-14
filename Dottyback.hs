@@ -20,8 +20,12 @@ renderSVG f w h p = withSVGSurface f w h $ \surface -> do
 
 main :: IO ()
 main = do
-  renderPNG "/tmp/foo.png" width_ height_ pic
-  renderSVG "/tmp/foo.svg" width_ height_ pic
+  let images = [ (pic, "/tmp/foo")
+               , (image1, "/tmp/image1") ]
+
+  flip mapM_ images $ \(p, f) -> do
+    renderPNG (f ++ ".png") width_ height_ p
+    renderSVG (f ++ ".svg") width_ height_ p
 
 type Point  = (Double, Double)
 type Vector = (Double, Double)
@@ -143,6 +147,9 @@ squareCenter s = midpoint (topLeft s) (bottomRight s)
 
 kernelCentre :: Kernel3x3 -> Point
 kernelCentre k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
+
+koPixelRadius :: KernelOriented -> Length
+koPixelRadius k = koRadius k / 3
 
 squareCenterRadius :: Point -> Double -> Square
 squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r) (1,1,1)
@@ -294,3 +301,45 @@ pic = do
   drawSquare         pixel
   drawArc            arc_
   drawText           label
+
+image1 :: Render ()
+image1 = do
+  setSourceRGB 1 1 1
+  rectangle 0 0 width_ height_
+  fill
+
+  setSourceRGB 0 0 0
+  setLineWidth 1
+
+  let boundingBox = Rectangle (0, 0) (width_, height_)
+      square1     = squareCenterRadius (0.25 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 4)
+
+      square2     = squareCenterRadius (0.75 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 4)
+
+      kernel1     = KernelOriented ((0.3, 0.3) `withinSquare` square1)
+                                   (0.15 * sLength square1)
+                                   N
+      kernel2     = KernelOriented ((0.6, 0.7) `withinSquare` square1)
+                                   (0.15 * sLength square1)
+                                   N
+
+      pixel1      = squareCenterRadius ((0.3, 0.3) `withinSquare` square2)
+                                       (koPixelRadius kernel1)
+
+      pixel2      = squareCenterRadius ((0.6, 0.7) `withinSquare` square2)
+                                       (koPixelRadius kernel1)
+
+      arc1        = Arc (koCenter kernel1) (squareCenter pixel1) 0.3
+      arc2        = Arc (koCenter kernel2) (squareCenter pixel2) 0.3
+
+
+  drawSquare         square1
+  drawSquare         square2
+  drawKernelOriented kernel1
+  drawKernelOriented kernel2
+  drawSquare         pixel1
+  drawSquare         pixel2
+  drawArc            arc1
+  drawArc            arc2
