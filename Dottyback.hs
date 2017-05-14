@@ -31,25 +31,25 @@ renderSVG f w h p = withSVGSurface f w h $ \surface -> do
 
 main :: IO ()
 main = do
-  let images = [ (pic, "/tmp/foo")
-               , (image1, "/tmp/image1")
-               , (image3, "/tmp/image3")
-               , (image5, "/tmp/image5")
-               , (image6, "/tmp/image6")
-               , (image6a, "/tmp/image6a")
-               , (image7 N, "/tmp/image71N")
-               , (image7 E, "/tmp/image72E")
-               , (image7 S, "/tmp/image73S")
-               , (image7 W, "/tmp/image74W")
-               , (image8 N, "/tmp/image81N")
-               , (image8 E, "/tmp/image82E")
-               , (image8 S, "/tmp/image83S")
-               , (image8 W, "/tmp/image84W")
+  let images = [ (pic, "foo")
+               , (image1, "image1")
+               , (image3, "image3")
+               , (image5, "image5")
+               , (image6, "image6")
+               , (image6a, "image6a")
+               , (image7 N, "image71N")
+               , (image7 E, "image72E")
+               , (image7 S, "image73S")
+               , (image7 W, "image74W")
+               , (image8 N, "image81N")
+               , (image8 E, "image82E")
+               , (image8 S, "image83S")
+               , (image8 W, "image84W")
                ]
 
   flip mapM_ images $ \(p, f) -> do
-    renderPNG (f ++ ".png") width_ height_ p
-    renderSVG (f ++ ".svg") width_ height_ p
+    renderPNG ("Output/" ++ f ++ ".png") width_ height_ p
+    renderSVG ("Output/" ++ f ++ ".svg") width_ height_ p
 
 type Point  = (Double, Double)
 type Vector = (Double, Double)
