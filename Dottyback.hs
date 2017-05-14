@@ -437,6 +437,7 @@ image3 = do
   drawSquare         pixel1
   drawArc            arc1
   
+imageG :: (Vector -> Vector) -> (Vector -> Vector) -> Render ()
 imageG tt ff = do
   initR
 
