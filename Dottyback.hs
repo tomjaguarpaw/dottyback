@@ -85,6 +85,11 @@ data Rectangle = Rectangle
   , rBottomRight :: Point
   }
 
+data RectangleColor = RectangleColor
+  { rcRectangle :: Rectangle
+  , rcColor     :: Color
+  }
+
 horizMidline :: Rectangle -> LineSegment
 horizMidline r = LineSegment (midpoint (rTopLeft  r) (rBottomLeft  r))
                              (midpoint (rTopRight r) (rBottomRight r))
@@ -247,6 +252,19 @@ drawRectangle (Rectangle (x1, y1) (x2, y2)) = do
   lineTo x2 y2
   lineTo x1 y2
   closePath
+  stroke
+
+drawRectangleColor :: RectangleColor -> Render ()
+drawRectangleColor (RectangleColor (Rectangle (x1, y1) (x2, y2)) (c1, c2, c3)) = do
+  moveTo x1 y1
+  lineTo x2 y1
+  lineTo x2 y2
+  lineTo x1 y2
+  closePath
+  setFillRule FillRuleWinding
+  setSourceRGB c1 c2 c3
+  fillPreserve
+  setSourceRGB 0 0 0
   stroke
 
 gPlane4Squares :: GPlane -> (Square, Square, Square, Square)
@@ -461,11 +479,13 @@ image2 = do
       sSE = thisSquare (0.7, 0.8)
       sSW = thisSquare (0.3, 0.8)
 
-      i1 = Rectangle (koCenter kernel1 .+ (koRadius kernel1 .* (-0.5, -1.7)))
-                     (koCenter kernel1 .+ (koRadius kernel1 .* (1.2, 1.5)))
+      i1 = RectangleColor (Rectangle (koCenter kernel1 .+ (koRadius kernel1 .* (-0.5, -1.7)))
+                                     (koCenter kernel1 .+ (koRadius kernel1 .* (1.2, 3))))
+                          (1, 0, 0)
 
-      i2 = Rectangle (koCenter kernel2 .+ (koRadius kernel2 .* (-0.5, -1.7)))
-                     (koCenter kernel2 .+ (koRadius kernel2 .* (1.2, 1.5)))
+      i2 = RectangleColor (Rectangle (koCenter kernel2 .+ (koRadius kernel2 .* (-0.5, -1.7)))
+                                     (koCenter kernel2 .+ (koRadius kernel2 .* (1.2, 3))))
+                          (1, 0, 0)
 
       kernel1 = kernelOriented ((0.2, 0.3) `withinSquare` sNW)
                                (0.15 * sLength sNW)
@@ -486,7 +506,7 @@ image2 = do
 
   mapM_ drawSquare [sNW, sNE, sSE, sSW]
   mapM_ drawSquare [pixel1, pixel2]
-  mapM_ drawRectangle [i1, i2]
+  mapM_ drawRectangleColor [i1, i2]
   mapM_ drawKernelOriented [kernel1, kernel2]
   mapM_ drawArc    [arc1, arc2]
 
