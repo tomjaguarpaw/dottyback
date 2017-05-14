@@ -230,6 +230,13 @@ gPlane4Squares (GPlane (cx, cy) h r) =
   , squareCenterRadius (cx, cy + h) r
   )
 
+gPlane1Square :: GPlane -> Orientation -> Square
+gPlane1Square (GPlane t h r) o = flip squareCenterRadius r . (t .+) $ case o of
+  N -> (0, -h)
+  E -> (h, 0)
+  S -> (0, h)
+  W -> (-h, 0)
+
 drawGPlane :: GPlane -> Render ()
 drawGPlane g = mapM_ drawSquare [a, b, c, d]
   where (a, b, c, d) = gPlane4Squares g
