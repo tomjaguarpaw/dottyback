@@ -138,8 +138,8 @@ data Arc = Arc
 midpoint :: Point -> Point -> Point
 midpoint (x1, y1) (x2, y2) = ((x1 + x2) / 2, (y1 + y2) / 2)
 
-squareCentre :: Square -> Point
-squareCentre s = midpoint (topLeft s) (bottomRight s)
+squareCenter :: Square -> Point
+squareCenter s = midpoint (topLeft s) (bottomRight s)
 
 kernelCentre :: Kernel3x3 -> Point
 kernelCentre k = midpoint (kernel3x3TopLeft k) (kernel3x3BottomRight k)
@@ -279,7 +279,7 @@ pic = do
                                         gPlaneTop gPlane2)
                                        (0.2 / 3 * sLength square)
       arc_        = Arc (koCenter kernelO)
-                        (squareCentre pixel)
+                        (squareCenter pixel)
                         0.3
 
       label       = Text (midpoint (arcFrom arc_) (arcTo arc_))
