@@ -33,6 +33,10 @@ main = do
                , (image7 E, "/tmp/image72E")
                , (image7 S, "/tmp/image73S")
                , (image7 W, "/tmp/image74W")
+               , (image8 N, "/tmp/image81N")
+               , (image8 E, "/tmp/image82E")
+               , (image8 S, "/tmp/image83S")
+               , (image8 W, "/tmp/image84W")
                ]
 
   flip mapM_ images $ \(p, f) -> do
@@ -114,7 +118,10 @@ data Kernel3x3 = Kernel3x3
   , kernel3x3BottomRight :: Point
   }
 
-data Orientation = N | E | S | W
+data Orientation = N | E | S | W deriving Enum
+
+oAdd :: Orientation -> Orientation -> Orientation
+oAdd o1 o2 = toEnum ((fromEnum o1 + fromEnum o2) `mod` 4)
 
 data KernelOriented = KernelOriented
   { koCenter      :: Point
@@ -530,3 +537,79 @@ image7 o = do
   drawKernelOriented kernelO
   drawSquare         pixel
   drawArc            arc_
+
+image8 :: Orientation -> Render ()
+image8 o = do
+  initR
+
+  let gPlane1 = gPlaneCenterRadius (0.25 `along` horizMidline boundingBox)
+                (rHeight boundingBox / 5)
+
+      gPlane2 = gPlaneCenterRadius (0.75 `along` horizMidline boundingBox)
+               (rHeight boundingBox / 5)
+
+      (l, r, t, b) = gPlane4Squares gPlane2
+
+      (l1, r1, t1, b1) = gPlane4Squares gPlane1
+
+      pixelSquare = case o of
+        N -> t
+        E -> r
+        S -> b
+        W -> l
+
+      y = (0.8, 0.8, 0.8)
+      g = (0.3, 0.3, 0.3)
+      w = (1, 1, 1)
+
+      kernelOl    = KernelOriented ((0.3, 0.3) `withinSquare`p)
+                                   (0.2 * sLength p)
+                                   o
+                                   [ [ y, y, y ]
+                                   , [ y, w, w ]
+                                   , [ g, g, w ] ]
+        where p = gPlane1Square gPlane1 (oAdd o N)
+  
+
+      kernelOr    = KernelOriented ((0.3, 0.3) `withinSquare` p)
+                                   (0.2 * sLength p)
+                                   o
+                                   [ [ w, w, w ]
+                                   , [ y, g, g ]
+                                   , [ w, w, w ] ]
+        where p = gPlane1Square gPlane1 (oAdd o E)
+
+
+      kernelOt    = KernelOriented ((0.3, 0.3) `withinSquare` p)
+                                   (0.2 * sLength p)
+                                   o
+                                   [ [ g, w, w ]
+                                   , [ y, g, g ]
+                                   , [ w, w, y ] ]
+        where p = gPlane1Square gPlane1 (oAdd o S)
+
+
+      kernelOb    = KernelOriented ((0.3, 0.3) `withinSquare` p)
+                                   (0.2 * sLength p)
+                                   o
+                                   [ [ y, w, y ]
+                                   , [ w, g, w ]
+                                   , [ g, g, g ] ]
+        where p = gPlane1Square gPlane1 (oAdd o W)
+
+      pixel       = squareCenterRadius ((0.3, 0.3)
+                                        `withinSquare`
+                                        pixelSquare)
+                                       (0.2 / 3 * sLength pixelSquare)
+
+      arcs = map (\x -> Arc (koCenter x) (squareCenter pixel) 0.4)
+                 [kernelOl, kernelOr, kernelOt, kernelOb]
+
+
+  drawGPlane         gPlane1
+  drawGPlane         gPlane2
+  drawRectangle      boundingBox
+  mapM_ drawKernelOriented [kernelOl, kernelOr, kernelOt, kernelOb]
+  drawSquare         pixel
+  mapM_ drawArc      arcs
+
