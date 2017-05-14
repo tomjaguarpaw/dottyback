@@ -42,6 +42,7 @@ main = do
 type Point  = (Double, Double)
 type Vector = (Double, Double)
 type Length = Double
+type Color  = (Double, Double, Double)
 
 data Text = Text
   { tStart  :: Point
@@ -99,7 +100,7 @@ sLength (Square (_, y1) (_, y2) _) = y2 - y1
 data Square = Square
   { topLeft     :: Point
   , bottomRight :: Point
-  , color       :: (Double, Double, Double)
+  , color       :: Color
   }
 
 data GPlane = GPlane
@@ -119,7 +120,7 @@ data KernelOriented = KernelOriented
   { koCenter      :: Point
   , koRadius      :: Length
   , koOrientation :: Orientation
-  , koData        :: [[(Double, Double, Double)]]
+  , koData        :: [[Color]]
   }
 
 kernelOriented :: Point -> Length -> Orientation -> KernelOriented
@@ -174,7 +175,7 @@ koPixelRadius k = koRadius k / 3
 squareCenterRadius :: Point -> Double -> Square
 squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r) (1,1,1)
 
-squareCenterRadiusColor :: Point -> Double -> (Double, Double, Double) -> Square
+squareCenterRadiusColor :: Point -> Double -> Color -> Square
 squareCenterRadiusColor (cx, cy) r c =
   Square (cx - r, cy - r) (cx + r, cy + r) c
 
@@ -191,7 +192,7 @@ gPlaneTop g = t
 data F = F
   { fCenter :: Point
   , fUp     :: Vector
-  , fColor  :: (Double, Double, Double)
+  , fColor  :: Color
   }
 
 data FShadow = FShadow
