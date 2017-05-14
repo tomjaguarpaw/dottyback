@@ -25,6 +25,7 @@ main = do
                , (image3, "/tmp/image3")
                , (image5, "/tmp/image5")
                , (image6, "/tmp/image6")
+               , (image6a, "/tmp/image6a")
                ]
 
   flip mapM_ images $ \(p, f) -> do
@@ -487,6 +488,37 @@ image6 = do
                              ((squareCenter x .- center gPlane1) ./ 25)
 
       g x          = FShadow (F (squareCenter x .+ (d ./ 8))
+                                fHeight
+                                (1, 0, 0))
+                             (d ./ 25)
+        where d = squareCenter x .- center gPlane2
+
+  mapM_ drawGPlane [gPlane1, gPlane2]
+  mapM_ drawFShadow (map f [l1, r1, t1, b1])
+  mapM_ drawFShadow (map g [l2, r2, t2, b2])
+
+image6a :: Render ()
+image6a = do
+  initR
+
+  let boundingBox = Rectangle (0, 0) (width_, height_)
+
+      gPlane1     = gPlaneCenterRadius (0.25 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 5)
+
+      gPlane2     = gPlaneCenterRadius (0.75 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 5)
+
+
+      (l1, r1, t1, b1) = gPlane4Squares gPlane1
+      (l2, r2, t2, b2) = gPlane4Squares gPlane2
+
+      fHeight      = sCenterToTop l1 ./ 2
+
+      f x          = FShadow (F (squareCenter x) fHeight (1, 0, 0))
+                             ((squareCenter x .- center gPlane1) ./ 25)
+
+      g x          = FShadow (F (squareCenter x .+ rotate90 (d ./ 7))
                                 fHeight
                                 (1, 0, 0))
                              (d ./ 25)
