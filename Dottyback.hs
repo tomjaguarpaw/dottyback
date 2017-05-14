@@ -541,9 +541,21 @@ image4 = do
       arc1        = Arc (kernelCenter kernel1) (squareCenter pixel1) 0.3
       arc2        = Arc (kernelCenter kernel2) (squareCenter pixel2) 0.3
 
+      kernel      = KernelOriented (rCenter boundingBox)
+                                   (kRadius kernel1)
+                                   N
+                                   [ [ w, g, w ]
+                                   , [ g, y, g ]
+                                   , [ w, g, w ] ]
+        where y = (0.8, 0.8, 0.8)
+              g = (0.3, 0.3, 0.3)
+              w = (1, 1, 1)
+
+
   mapM_ drawSquare [sNW, sNE, sSE, sSW]
   mapM_ drawSquare [pixel1, pixel2]
   mapM_ drawKernel3x3 [kernel1, kernel2]
+  drawKernelOriented kernel
   mapM_ drawArc    [arc1, arc2]
 
 imageG :: (Vector -> Vector) -> (Vector -> Vector) -> Render ()
