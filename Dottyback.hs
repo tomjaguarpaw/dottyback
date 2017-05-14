@@ -33,6 +33,7 @@ main :: IO ()
 main = do
   let images = [ (pic, "foo")
                , (image1, "image1")
+               , (image2, "image2")
                , (image3, "image3")
                , (image5, "image5")
                , (image6, "image6")
@@ -89,6 +90,10 @@ horizMidline r = LineSegment (midpoint (rTopLeft  r) (rBottomLeft  r))
 
 withinSquare :: (Double, Double) -> Square -> Point
 withinSquare (x, y) (Square (x1, y1) (x2, y2) _) =
+  (x1 + (x2 - x1) * x, y1 + (y2 - y1) * y)
+
+withinRectangle :: (Double, Double) -> Rectangle -> Point
+withinRectangle (x, y) (Rectangle (x1, y1) (x2, y2)) =
   (x1 + (x2 - x1) * x, y1 + (y2 - y1) * y)
 
 rTopRight :: Rectangle -> Point
@@ -436,6 +441,40 @@ image1 = do
   drawSquare         pixel2
   drawArc            arc1
   drawArc            arc2
+
+image2 :: Render ()
+image2 = do
+  initR
+
+  let thisSquare t = squareCenterRadius (t `withinRectangle` boundingBox)
+                                        (rHeight boundingBox / 6)
+
+      sNW = thisSquare (0.3, 0.2)
+      sNE = thisSquare (0.7, 0.2)
+      sSE = thisSquare (0.7, 0.8)
+      sSW = thisSquare (0.3, 0.8)
+
+      kernel1 = kernelOriented ((0.2, 0.3) `withinSquare` sNW)
+                               (0.15 * sLength sNW)
+                               N
+
+      kernel2 = kernelOriented ((0.8, 0.5) `withinSquare` sSW)
+                               (0.15 * sLength sNW)
+                               N
+
+      pixel1 = squareCenterRadius ((0.2, 0.3) `withinSquare` sNE)
+                                  (koPixelRadius kernel1)
+
+      pixel2 = squareCenterRadius ((0.8, 0.5) `withinSquare` sSE)
+                                  (koPixelRadius kernel2)
+
+      arc1        = Arc (koCenter kernel1) (squareCenter pixel1) 0.3
+      arc2        = Arc (koCenter kernel2) (squareCenter pixel2) 0.3
+
+  mapM_ drawSquare [sNW, sNE, sSE, sSW]
+  mapM_ drawSquare [pixel1, pixel2]
+  mapM_ drawKernelOriented [kernel1, kernel2]
+  mapM_ drawArc    [arc1, arc2]
 
 image3 :: Render ()
 image3 = do
