@@ -135,9 +135,9 @@ drawKernelOriented k = mapM_ drawSquare squares
 
                      let (x', y') = case koOrientation k of
                            N -> (x, y)
-                           E -> (-y, x)
+                           E -> (y, -x)
                            S -> (-x, -y)
-                           W -> (y, -x)
+                           W -> (-y, x)
 
                      return (squareCenterRadiusColor
                           (koCenter k .+ ( fromIntegral x * koRadius k / 3 * 2
