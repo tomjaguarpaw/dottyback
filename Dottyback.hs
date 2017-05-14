@@ -553,23 +553,36 @@ image4 = do
       sSE = thisSquare (0.7, 0.8)
       sSW = thisSquare (0.3, 0.8)
 
-      kernel1 = kernel3x3CenterRadius ((0.2, 0.3) `withinSquare` sNW)
-                                      (0.15 * sLength sNW)
+      i1 = RectangleColor (Rectangle (koCenter kernel1 .+ (koRadius kernel1 .* (-0.5, -1.7)))
+                                     (koCenter kernel1 .+ (koRadius kernel1 .* (1.2, 2))))
+                          (1, 0, 0)
 
-      kernel2 = kernel3x3CenterRadius ((0.2, 0.3) `withinSquare` sSW)
-                                      (0.15 * sLength sNW)
+      p = (0.7, 0.2) `withinSquare` sSW
+
+      i2 = RectangleColor (Rectangle (p .+ (koRadius kernel2 .* (-2, -0.5)))
+                                     (p .+ (koRadius kernel2 .* (1.7, 1.2))))
+                          (1, 0, 0)
+
+
+      kernel1 = kernelOriented ((0.2, 0.3) `withinSquare` sNW)
+                               (0.15 * sLength sNW)
+                               N
+
+      kernel2 = kernelOriented ((0.7, 0.2) `withinSquare` sSW)
+                               (0.15 * sLength sNW)
+                               N
 
       pixel1 = squareCenterRadius ((0.2, 0.3) `withinSquare` sNE)
-                                  (kPixelRadius kernel1)
+                                  (koPixelRadius kernel1)
 
-      pixel2 = squareCenterRadius ((0.2, 0.3) `withinSquare` sSE)
-                                  (kPixelRadius kernel2)
+      pixel2 = squareCenterRadius ((0.7, 0.2) `withinSquare` sSE)
+                                  (koPixelRadius kernel2)
 
-      arc1        = Arc (kernelCenter kernel1) (squareCenter pixel1) 0.3
-      arc2        = Arc (kernelCenter kernel2) (squareCenter pixel2) 0.3
+      arc1        = Arc (koCenter kernel1) (squareCenter pixel1) 0.3
+      arc2        = Arc (koCenter kernel2) (squareCenter pixel2) 0.3
 
       kernel      = KernelOriented (rCenter boundingBox)
-                                   (kRadius kernel1)
+                                   (koRadius kernel1)
                                    N
                                    [ [ w, g, w ]
                                    , [ g, y, g ]
@@ -581,7 +594,8 @@ image4 = do
 
   mapM_ drawSquare [sNW, sNE, sSE, sSW]
   mapM_ drawSquare [pixel1, pixel2]
-  mapM_ drawKernel3x3 [kernel1, kernel2]
+  mapM_ drawRectangleColor [i1, i2]
+  mapM_ drawKernelOriented [kernel1, kernel2]
   drawKernelOriented kernel
   mapM_ drawArc    [arc1, arc2]
 
