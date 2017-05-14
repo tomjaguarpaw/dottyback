@@ -35,6 +35,7 @@ main = do
                , (image1, "image1")
                , (image2, "image2")
                , (image3, "image3")
+               , (image4, "image4")
                , (image5, "image5")
                , (image6, "image6")
                , (image6a, "image6a")
@@ -193,7 +194,7 @@ koPixelRadius :: KernelOriented -> Length
 koPixelRadius k = koRadius k / 3
 
 kPixelRadius :: Kernel3x3 -> Length
-kPixelRadius k = fst (kernel3x3BottomRight k) - fst (kernel3x3TopLeft k)
+kPixelRadius k = (fst (kernel3x3BottomRight k) - fst (kernel3x3TopLeft k)) / 6
 
 squareCenterRadius :: Point -> Double -> Square
 squareCenterRadius (cx, cy) r = Square (cx - r, cy - r) (cx + r, cy + r) (1,1,1)
@@ -510,6 +511,38 @@ image3 = do
   drawSquare         pixel1
   drawArc            arc1
   
+image4 :: Render ()
+image4 = do
+  initR
+
+  let thisSquare t = squareCenterRadius (t `withinRectangle` boundingBox)
+                                        (rHeight boundingBox / 6)
+
+      sNW = thisSquare (0.3, 0.2)
+      sNE = thisSquare (0.7, 0.2)
+      sSE = thisSquare (0.7, 0.8)
+      sSW = thisSquare (0.3, 0.8)
+
+      kernel1 = kernel3x3CenterRadius ((0.2, 0.3) `withinSquare` sNW)
+                                      (0.15 * sLength sNW)
+
+      kernel2 = kernel3x3CenterRadius ((0.2, 0.3) `withinSquare` sSW)
+                                      (0.15 * sLength sNW)
+
+      pixel1 = squareCenterRadius ((0.2, 0.3) `withinSquare` sNE)
+                                  (kPixelRadius kernel1)
+
+      pixel2 = squareCenterRadius ((0.2, 0.3) `withinSquare` sSE)
+                                  (kPixelRadius kernel2)
+
+      arc1        = Arc (kernelCenter kernel1) (squareCenter pixel1) 0.3
+      arc2        = Arc (kernelCenter kernel2) (squareCenter pixel2) 0.3
+
+  mapM_ drawSquare [sNW, sNE, sSE, sSW]
+  mapM_ drawSquare [pixel1, pixel2]
+  mapM_ drawKernel3x3 [kernel1, kernel2]
+  mapM_ drawArc    [arc1, arc2]
+
 imageG :: (Vector -> Vector) -> (Vector -> Vector) -> Render ()
 imageG tt ff = do
   initR
