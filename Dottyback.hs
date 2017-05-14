@@ -21,7 +21,7 @@ renderSVG f w h p = withSVGSurface f w h $ \surface -> do
 main :: IO ()
 main = do
   renderPNG "/tmp/foo.png" width_ height_ pic
-  renderSVG "/tmp/foo.png" width_ height_ pic
+  renderSVG "/tmp/foo.svg" width_ height_ pic
 
 type Point  = (Double, Double)
 type Vector = (Double, Double)
