@@ -177,6 +177,11 @@ data F = F
   , fColor  :: (Double, Double, Double)
   }
 
+data FShadow = FShadow
+  { fsF         :: F
+  , fsShadowDir :: Vector
+  }
+
 drawSquare :: Square -> Render ()
 drawSquare (Square (x1, y1) (x2, y2) (c1, c2, c3)) = do
   moveTo x1 y1
@@ -262,6 +267,11 @@ drawF f = do
         (tx2, ty2) = r
         (tx1, ty1) = (ty2, -tx2)
         (c1, c2, c3) = fColor f
+
+drawFShadow :: FShadow -> Render ()
+drawFShadow fs = do
+  drawF (F (fCenter (fsF fs) .+ fsShadowDir fs) (fUp (fsF fs)) (0,0,0))
+  drawF (fsF fs)
 
 modulus :: Vector -> Double
 modulus (x, y) = sqrt (x * x + y * y)
@@ -423,6 +433,6 @@ image5 = do
   initR
 
   let boundingBox = Rectangle (0, 0) (width_, height_)
-      f           = F ((rCenter boundingBox) .+ (100, 100)) (0, 100) (1, 0, 0)
+      f           = FShadow (F ((rCenter boundingBox) .+ (100, 100)) (0, 100) (1, 0, 0)) (15, 0)
 
-  drawF f
+  drawFShadow f
