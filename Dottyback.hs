@@ -29,6 +29,10 @@ main = do
                , (image5, "/tmp/image5")
                , (image6, "/tmp/image6")
                , (image6a, "/tmp/image6a")
+               , (image7 N, "/tmp/image71N")
+               , (image7 E, "/tmp/image72E")
+               , (image7 S, "/tmp/image73S")
+               , (image7 W, "/tmp/image74W")
                ]
 
   flip mapM_ images $ \(p, f) -> do
@@ -478,3 +482,39 @@ image6 = imageG (\d -> d ./ 7) id
 
 image6a :: Render ()
 image6a = imageG (\d -> rotate90 (d ./ 7)) id
+
+image7 :: Orientation -> Render ()
+image7 o = do
+  initR
+
+  let gPlane       = gPlaneCenterRadius (0.7 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 3.5)
+
+      (l, r, t, b) = gPlane4Squares gPlane
+
+      pixelSquare = case o of
+        N -> t
+        E -> r
+        S -> b
+        W -> l
+
+      square      = squareCenterRadius (0.15 `along` horizMidline boundingBox)
+                                       (rHeight boundingBox / 3.5 / 2.5)
+      kernelO     = KernelOriented ((0.3, 0.3) `withinSquare` square)
+                                   (0.2 * sLength square)
+                                   o
+      pixel       = squareCenterRadius ((0.3, 0.3)
+                                        `withinSquare`
+                                        pixelSquare)
+                                       (0.2 / 3 * sLength square)
+      arc_        = Arc (koCenter kernelO)
+                        (squareCenter pixel)
+                        0.3
+
+
+  drawGPlane         gPlane
+  drawRectangle      boundingBox
+  drawSquare         square
+  drawKernelOriented kernelO
+  drawSquare         pixel
+  drawArc            arc_
