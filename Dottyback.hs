@@ -437,8 +437,7 @@ image3 = do
   drawSquare         pixel1
   drawArc            arc1
   
-image5 :: Render ()
-image5 = do
+imageG tt ff = do
   initR
 
   let boundingBox = Rectangle (0, 0) (width_, height_)
@@ -456,74 +455,27 @@ image5 = do
       fHeight      = sCenterToTop l1 ./ 2
 
       f x          = FShadow (F (squareCenter x) fHeight (1, 0, 0))
-                             ((squareCenter x .- center gPlane1) ./ 25)
+                             (d ./ 25)
+        where d = squareCenter x .- center gPlane1
 
-      g x          = FShadow (F (squareCenter x) (rotate270 fHeight) (1, 0, 0))
-                             ((squareCenter x .- center gPlane2) ./ 25)
+      g x          = FShadow (F (squareCenter x .+ tt d)
+                                (ff fHeight)
+                                (1, 0, 0))
+                             (d ./ 25)
+        where d = squareCenter x .- center gPlane2
+
 
 
   mapM_ drawGPlane [gPlane1, gPlane2]
   mapM_ drawFShadow (map f [l1, r1, t1, b1])
   mapM_ drawFShadow (map g [l2, r2, t2, b2])
+
+
+image5 :: Render ()
+image5 = imageG (const (0,0)) rotate270
 
 image6 :: Render ()
-image6 = do
-  initR
-
-  let boundingBox = Rectangle (0, 0) (width_, height_)
-
-      gPlane1     = gPlaneCenterRadius (0.25 `along` horizMidline boundingBox)
-                                       (rHeight boundingBox / 5)
-
-      gPlane2     = gPlaneCenterRadius (0.75 `along` horizMidline boundingBox)
-                                       (rHeight boundingBox / 5)
-
-
-      (l1, r1, t1, b1) = gPlane4Squares gPlane1
-      (l2, r2, t2, b2) = gPlane4Squares gPlane2
-
-      fHeight      = sCenterToTop l1 ./ 2
-
-      f x          = FShadow (F (squareCenter x) fHeight (1, 0, 0))
-                             ((squareCenter x .- center gPlane1) ./ 25)
-
-      g x          = FShadow (F (squareCenter x .+ (d ./ 8))
-                                fHeight
-                                (1, 0, 0))
-                             (d ./ 25)
-        where d = squareCenter x .- center gPlane2
-
-  mapM_ drawGPlane [gPlane1, gPlane2]
-  mapM_ drawFShadow (map f [l1, r1, t1, b1])
-  mapM_ drawFShadow (map g [l2, r2, t2, b2])
+image6 = imageG (\d -> d ./ 7) id
 
 image6a :: Render ()
-image6a = do
-  initR
-
-  let boundingBox = Rectangle (0, 0) (width_, height_)
-
-      gPlane1     = gPlaneCenterRadius (0.25 `along` horizMidline boundingBox)
-                                       (rHeight boundingBox / 5)
-
-      gPlane2     = gPlaneCenterRadius (0.75 `along` horizMidline boundingBox)
-                                       (rHeight boundingBox / 5)
-
-
-      (l1, r1, t1, b1) = gPlane4Squares gPlane1
-      (l2, r2, t2, b2) = gPlane4Squares gPlane2
-
-      fHeight      = sCenterToTop l1 ./ 2
-
-      f x          = FShadow (F (squareCenter x) fHeight (1, 0, 0))
-                             ((squareCenter x .- center gPlane1) ./ 25)
-
-      g x          = FShadow (F (squareCenter x .+ rotate90 (d ./ 7))
-                                fHeight
-                                (1, 0, 0))
-                             (d ./ 25)
-        where d = squareCenter x .- center gPlane2
-
-  mapM_ drawGPlane [gPlane1, gPlane2]
-  mapM_ drawFShadow (map f [l1, r1, t1, b1])
-  mapM_ drawFShadow (map g [l2, r2, t2, b2])
+image6a = imageG (\d -> rotate90 (d ./ 7)) id
