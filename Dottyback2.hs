@@ -75,10 +75,10 @@ circleConnector c1 c2 = LineSegment {
 drawCircle :: Circle -> M
 drawCircle c = M $ do
   Cairo.arc (pX center)
-          (pY center)
-          (llength (cRadius c))
-          0
-          (2 * 3.14)
+            (pY center)
+            (llength (cRadius c))
+            0
+            (2 * 3.14)
   Cairo.stroke
   where center = cCenter c
 
