@@ -44,6 +44,11 @@ vectorLength = L.lens get set
   where get v   = Length (sqrt (vX v * vX v + vY v * vY v))
         set v l = (l /. get v) *. v
 
+vectorDirection :: L.Lens' Vector Direction
+vectorDirection = L.lens get set
+  where get = Direction
+        set v d = (d ..- get v) `rotateTurns` v
+
 rotateTurns :: Double -> Vector -> Vector
 rotateTurns theta v = Vector { vX =   cos (twopi * theta) * vX v
                                     - sin (twopi * theta) * vY v
@@ -77,6 +82,11 @@ data Rectangle = Rectangle
   , rHalfLength :: Length
   }
 
+rAxisL :: L.Lens' Rectangle Vector
+rAxisL = L.lens get set
+  where get = rAxis
+        set r a = r { rAxis = a }
+
 data LineSegment = LineSegment
   { lStart :: Point
   , lEnd   :: Point
@@ -105,6 +115,14 @@ p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
 
 (.-) :: Point -> Point -> Vector
 p1 .- p2 = Vector { vX = pX p1 - pX p2, vY = pY p1 - pY p2 }
+
+(..-) :: Direction -> Direction -> Double
+Direction v1 ..- Direction v2 = thetaRadians / (2 * 3.14159)
+  where dot = vX v1 * vX v2 + vY v1 * vY v2
+        Length mod1 = L.view vectorLength v1
+        Length mod2 = L.view vectorLength v2
+        cosTheta = dot / (mod1 * mod2)
+        thetaRadians = acos cosTheta
 
 centerLineSegment :: LineSegment -> Point
 centerLineSegment l = lStart l .+ (0.5 *. (lEnd l .- lStart l))
@@ -170,10 +188,12 @@ textLength t = (0.5 * fromIntegral (length (tText t))) *. tSize t
 
 image1 :: M
 image1 =
-  let frame = Rectangle { rCenter     = Point 250 250
-                        , rAxis       = Vector 0 (-200)
-                        , rHalfLength = Length 200
-                        }
+  let frame' = Rectangle { rCenter     = Point 250 250
+                         , rAxis       = Vector 0 (-200)
+                         , rHalfLength = Length 200
+                         }
+
+      frame = L.over (rAxisL.vectorDirection) (rotate 0.02) frame'
 
       c1 = Circle { cCenter = rCenter frame .+ (0.8 *. rAxis frame)
                   , cRadius = 0.1 *. L.view vectorLength (rAxis frame)
