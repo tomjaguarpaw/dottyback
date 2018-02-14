@@ -51,6 +51,9 @@ data LineSegment = LineSegment
   , lEnd   :: Point
   }
 
+(../) :: Length -> Length -> Double
+Length x1 ../ Length x2 = x1 / x2
+
 (./) :: Vector -> Double -> Vector
 v ./ l = Vector { vX = vX v / l, vY = vY v / l }
 
