@@ -31,6 +31,12 @@ data Vector = Vector
   , vY :: Double
   }
 
+data Text = Text
+  { tStart :: Point
+  , tText  :: String
+  , tSize  :: Length
+  }
+
 vectorLength :: L.Lens' Vector Length
 vectorLength = L.lens get set
   where get v   = Length (sqrt (vX v * vX v + vY v * vY v))
@@ -63,6 +69,9 @@ p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
 (.-) :: Point -> Point -> Vector
 p1 .- p2 = Vector { vX = pX p1 - pX p2, vY = pY p1 - pY p2 }
 
+centerLineSegment :: LineSegment -> Point
+centerLineSegment l = lStart l .+ (0.5 .* (lEnd l .- lStart l))
+
 fromToLength :: Point -> Point -> Length -> Point
 fromToLength p1 p2 l = p1 .+ L.set vectorLength l (p2 .- p1)
 
@@ -91,14 +100,26 @@ drawLineSegment l = M $ do
   Cairo.lineTo x2 y2
   Cairo.stroke
 
+drawText :: Text -> M
+drawText t = M $ do
+  let start = tStart t
+  let Length size = tSize t
+
+  Cairo.moveTo (pX start) (pY start)
+  Cairo.setFontSize size
+  Cairo.showText (tText t)
+
 image1 :: M
 image1 =
   let c1 = Circle (Point 50 50) (Length 10)
-      c2 = Circle (Point 70 100) (Length 25)
+      c2 = Circle (Point 70 100) (Length 5)
 
       l = circleConnector c1 c2
+      t = Text { tStart = centerLineSegment l
+               , tText = "(p, v)"
+               , tSize = cRadius c1 }
 
-  in mconcat [drawCircle c1, drawCircle c2, drawLineSegment l]
+  in mconcat [drawCircle c1, drawCircle c2, drawLineSegment l, drawText t]
 
 main :: IO ()
 main = do
