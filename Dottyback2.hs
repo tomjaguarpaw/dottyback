@@ -1,4 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE FunctionalDependencies     #-}
 
 module Dottyback2 where
 
@@ -40,7 +42,7 @@ data Text = Text
 vectorLength :: L.Lens' Vector Length
 vectorLength = L.lens get set
   where get v   = Length (sqrt (vX v * vX v + vY v * vY v))
-        set v l = (l ../ get v) .* v
+        set v l = (l /. get v) *. v
 
 rotateTurns :: Double -> Vector -> Vector
 rotateTurns theta v = Vector { vX =   cos (twopi * theta) * vX v
@@ -58,6 +60,9 @@ vectorNegate v = Vector { vX = - vX v, vY = - vY v }
 
 vectorDL :: Direction -> Length -> Vector
 vectorDL (Direction v) l = L.set vectorLength l v
+
+inDirection :: Length -> Direction -> Vector
+inDirection = flip vectorDL
 
 data Direction = Direction Vector
 
@@ -77,17 +82,23 @@ data LineSegment = LineSegment
   , lEnd   :: Point
   }
 
-(../) :: Length -> Length -> Double
-Length x1 ../ Length x2 = x1 / x2
+class Divide a b c | b c -> a, a b -> c, a c -> b where
+  (/.) :: a -> b -> c
 
-(./) :: Vector -> Double -> Vector
-v ./ l = Vector { vX = vX v / l, vY = vY v / l }
+instance Divide Length Length Double where
+  Length x1 /. Length x2 = x1 / x2
 
-(.*) :: Double -> Vector -> Vector
-l .* v = Vector { vX = vX v * l, vY = vY v * l }
+instance Divide Vector Double Vector where
+  v /. l = Vector { vX = vX v / l, vY = vY v / l }
 
-(..*) :: Double -> Length -> Length
-l ..* (Length len) = Length (l * len)
+class Multiply a where
+  (*.) :: Double -> a -> a
+
+instance Multiply Vector where
+  l *. v = Vector { vX = vX v * l, vY = vY v * l }
+
+instance Multiply Length where
+  l *. (Length len) = Length (l * len)
 
 (.+) :: Point -> Vector -> Point
 p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
@@ -96,7 +107,7 @@ p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
 p1 .- p2 = Vector { vX = pX p1 - pX p2, vY = pY p1 - pY p2 }
 
 centerLineSegment :: LineSegment -> Point
-centerLineSegment l = lStart l .+ (0.5 .* (lEnd l .- lStart l))
+centerLineSegment l = lStart l .+ (0.5 *. (lEnd l .- lStart l))
 
 fromToLength :: Point -> Point -> Length -> Point
 fromToLength p1 p2 l = p1 .+ L.set vectorLength l (p2 .- p1)
@@ -153,6 +164,10 @@ drawRectangle r = M $ do
   where onPoint f p = f (pX p) (pY p)
 
 
+-- | Approximate length
+textLength :: Text -> Length
+textLength t = (0.5 * fromIntegral (length (tText t))) *. tSize t
+
 image1 :: M
 image1 =
   let frame = Rectangle { rCenter     = Point 250 250
@@ -160,18 +175,18 @@ image1 =
                         , rHalfLength = Length 200
                         }
 
-      c1 = Circle { cCenter = rCenter frame .+ (0.8 .* rAxis frame)
-                  , cRadius = 0.1 ..* L.view vectorLength (rAxis frame)
+      c1 = Circle { cCenter = rCenter frame .+ (0.8 *. rAxis frame)
+                  , cRadius = 0.1 *. L.view vectorLength (rAxis frame)
                   }
       c2 = Circle { cCenter = cCenter c1
-                              .+ vectorDL down (6 ..* cRadius c1)
-                              .+ vectorDL left (3 ..* cRadius c1)
-                  , cRadius = 0.8 ..* cRadius c1
+                              .+ ((6 *. cRadius c1) `inDirection` down)
+                              .+ ((3 *. cRadius c1) `inDirection` left)
+                  , cRadius = 0.8 *. cRadius c1
                   }
 
       l = circleConnector c1 c2
       t = Text { tStart = centerLineSegment l
-                          .+ (0.5 .* (vectorDL left (fromIntegral (length (tText t)) ..* tSize t)))
+                          .+ (textLength t `inDirection` left)
                , tText = "(p, v)"
                , tSize = cRadius c1
                }
