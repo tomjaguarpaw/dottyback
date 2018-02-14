@@ -229,7 +229,7 @@ image1 =
 
       l = circleConnector c1 c2
       t = textBottomRight (centerLineSegment l)
-                          "(p, v) hello"
+                          "(p, v)"
                           (cRadius c1 `inDirection` right)
 
       up        = L.view vectorDirection (rAxis frame)
