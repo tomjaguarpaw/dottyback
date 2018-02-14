@@ -115,16 +115,13 @@ class Subtract a b c | b c -> a, a b -> c, a c -> b where
   (-.) :: a -> b -> c
 
 instance Subtract Point Point Vector where
-  (-.) = (.-)
+  p1 -. p2 = Vector { vX = pX p1 - pX p2, vY = pY p1 - pY p2 }
 
 instance Subtract Direction Direction Double where
   (-.) = (..-)
 
 (.+) :: Point -> Vector -> Point
 p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
-
-(.-) :: Point -> Point -> Vector
-p1 .- p2 = Vector { vX = pX p1 - pX p2, vY = pY p1 - pY p2 }
 
 (..-) :: Direction -> Direction -> Double
 Direction v1 ..- Direction v2 = thetaRadians / (2 * 3.14159)
