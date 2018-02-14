@@ -34,7 +34,7 @@ data Vector = Vector
 vectorLength :: L.Lens' Vector Length
 vectorLength = L.lens get set
   where get v   = Length (sqrt (vX v * vX v + vY v * vY v))
-        set v l = v .* (l ../ get v)
+        set v l = (l ../ get v) .* v
 
 data Direction = Direction Vector
 
@@ -54,8 +54,8 @@ Length x1 ../ Length x2 = x1 / x2
 (./) :: Vector -> Double -> Vector
 v ./ l = Vector { vX = vX v / l, vY = vY v / l }
 
-(.*) :: Vector -> Double -> Vector
-v .* l = Vector { vX = vX v * l, vY = vY v * l }
+(.*) :: Double -> Vector -> Vector
+l .* v = Vector { vX = vX v * l, vY = vY v * l }
 
 (.+) :: Point -> Vector -> Point
 p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
