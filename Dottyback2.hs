@@ -42,11 +42,34 @@ vectorLength = L.lens get set
   where get v   = Length (sqrt (vX v * vX v + vY v * vY v))
         set v l = (l ../ get v) .* v
 
+rotateTurns :: Double -> Vector -> Vector
+rotateTurns theta v = Vector { vX =   cos (twopi * theta) * vX v
+                                    - sin (twopi * theta) * vY v
+                             , vY =   sin (twopi * theta) * vX v
+                                    + cos (twopi * theta) * vY v
+                             }
+  where twopi = 2 * 3.14159
+
+rotate :: Double -> Direction -> Direction
+rotate theta (Direction v) = Direction (rotateTurns theta v)
+
+vectorNegate :: Vector -> Vector
+vectorNegate v = Vector { vX = - vX v, vY = - vY v }
+
+vectorDL :: Direction -> Length -> Vector
+vectorDL (Direction v) l = L.set vectorLength l v
+
 data Direction = Direction Vector
 
 data Circle = Circle
   { cCenter :: Point
   , cRadius :: Length
+  }
+
+data Rectangle = Rectangle
+  { rCenter     :: Point
+  , rAxis       :: Vector
+  , rHalfLength :: Length
   }
 
 data LineSegment = LineSegment
@@ -62,6 +85,9 @@ v ./ l = Vector { vX = vX v / l, vY = vY v / l }
 
 (.*) :: Double -> Vector -> Vector
 l .* v = Vector { vX = vX v * l, vY = vY v * l }
+
+(..*) :: Double -> Length -> Length
+l ..* (Length len) = Length (l * len)
 
 (.+) :: Point -> Vector -> Point
 p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
@@ -109,25 +135,66 @@ drawText t = M $ do
   Cairo.setFontSize size
   Cairo.showText (tText t)
 
+drawRectangle :: Rectangle -> M
+drawRectangle r = M $ do
+  let a1 = rAxis r
+      a2 = (L.set vectorLength (rHalfLength r)
+            . rotateTurns 0.25
+            . rAxis) r
+      center = rCenter r
+
+  onPoint Cairo.moveTo ((center .+ a1) .+ a2)
+  onPoint Cairo.lineTo ((center .+ a1) .+ vectorNegate a2)
+  onPoint Cairo.lineTo ((center .+ vectorNegate a1) .+ vectorNegate a2)
+  onPoint Cairo.lineTo ((center .+ vectorNegate a1) .+ a2)
+  Cairo.closePath
+  Cairo.stroke
+
+  where onPoint f p = f (pX p) (pY p)
+
+
 image1 :: M
 image1 =
-  let c1 = Circle (Point 50 50) (Length 10)
-      c2 = Circle (Point 70 100) (Length 5)
+  let frame = Rectangle { rCenter     = Point 250 250
+                        , rAxis       = Vector 0 (-200)
+                        , rHalfLength = Length 200
+                        }
+
+      c1 = Circle { cCenter = rCenter frame .+ (0.8 .* rAxis frame)
+                  , cRadius = 0.1 ..* L.view vectorLength (rAxis frame)
+                  }
+      c2 = Circle { cCenter = cCenter c1
+                              .+ vectorDL down (6 ..* cRadius c1)
+                              .+ vectorDL left (3 ..* cRadius c1)
+                  , cRadius = 0.8 ..* cRadius c1
+                  }
 
       l = circleConnector c1 c2
       t = Text { tStart = centerLineSegment l
+                          .+ (0.5 .* (vectorDL left (fromIntegral (length (tText t)) ..* tSize t)))
                , tText = "(p, v)"
-               , tSize = cRadius c1 }
+               , tSize = cRadius c1
+               }
 
-  in mconcat [drawCircle c1, drawCircle c2, drawLineSegment l, drawText t]
+      up        = Direction (rAxis frame)
+      right     = rotate 0.25 up
+      down      = rotate 0.5  up
+      left      = rotate 0.75 up
+
+  in mconcat [ drawRectangle frame
+             , drawCircle c1
+             , drawCircle c2
+             , drawLineSegment l
+             , drawText t
+             ]
 
 main :: IO ()
 main = do
   let images = [ (image1, "new_image1") ]
       width :: Num a => a
-      width = 200
+      width = 500
       height :: Num a => a
-      height = 200
+      height = 500
 
   flip mapM_ images $ \(M p, f) -> do
     Dottyback.renderPNG ("Output/" ++ f ++ ".png") width height (Dottyback.initR >> p)
