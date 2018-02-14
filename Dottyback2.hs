@@ -211,7 +211,7 @@ image1 =
                , tSize = cRadius c1
                }
 
-      up        = Direction (rAxis frame)
+      up        = L.view vectorDirection (rAxis frame)
       right     = rotate 0.25 up
       down      = rotate 0.5  up
       left      = rotate 0.75 up
