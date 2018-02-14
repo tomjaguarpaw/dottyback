@@ -35,17 +35,17 @@ data Vector = Vector
   }
 
 data Text = Text
-  { tStart  :: Point
-  , tText   :: String
-  , tHeight :: Vector
+  { tStart      :: Point
+  , tText       :: String
+  , tEmBaseline :: Vector
   }
 
 textBottomRight :: Point -> String -> Vector -> Text
 textBottomRight p s v = t
   where t = Text
-              { tStart  = p .+ vectorNegate (textRule t)
-              , tText   = s
-              , tHeight = v
+              { tStart      = p .+ vectorNegate (textRule t)
+              , tText       = s
+              , tEmBaseline = v
               }
 
 vectorLength :: L.Lens' Vector Length
@@ -172,11 +172,11 @@ drawLineSegment l = M $ do
 
 drawText :: Text -> M
 drawText t = M $ do
-  let start = tStart t
-      side  = tHeight t
+  let start    = tStart t
+      baseline = tEmBaseline t
 
-      length' = L.view vectorLength side /. Length 1
-      angle   = L.view vectorDirection side -. Direction (Vector 0 (-1))
+      length' = L.view vectorLength baseline /. Length 1
+      angle   = L.view vectorDirection baseline -. Direction (Vector 1 0)
 
   Cairo.moveTo (pX start) (pY start)
   Cairo.setFontMatrix ((Matrix.scale length' length'
@@ -203,8 +203,7 @@ drawRectangle r = M $ do
 
 -- | Approximate
 textRule :: Text -> Vector
-textRule t = textWidthInEm
-             *. L.over vectorDirection (rotate 0.25) (tHeight t)
+textRule t = textWidthInEm *. (tEmBaseline t)
   where -- This is why it's approximate
         approximateCharacterWidthInEm = 0.5
         numberOfCharacters = fromIntegral (length (tText t))
@@ -231,7 +230,7 @@ image1 =
       l = circleConnector c1 c2
       t = textBottomRight (centerLineSegment l)
                           "(p, v) hello"
-                          (cRadius c1 `inDirection` up)
+                          (cRadius c1 `inDirection` right)
 
       up        = L.view vectorDirection (rAxis frame)
       right     = rotate 0.25 up
