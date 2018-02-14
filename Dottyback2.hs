@@ -40,6 +40,14 @@ data Text = Text
   , tHeight :: Vector
   }
 
+textBottomRight :: Point -> String -> Vector -> Text
+textBottomRight p s v = t
+  where t = Text
+              { tStart  = p .+ vectorNegate (textRule t)
+              , tText   = s
+              , tHeight = v
+              }
+
 vectorLength :: L.Lens' Vector Length
 vectorLength = L.lens get set
   where get v   = Length (sqrt (vX v * vX v + vY v * vY v))
@@ -193,10 +201,14 @@ drawRectangle r = M $ do
   where onPoint f p = f (pX p) (pY p)
 
 
--- | Approximate length
-textLength :: Text -> Length
-textLength t = (0.5 * fromIntegral (length (tText t)))
-               *. L.view vectorLength (tHeight t)
+-- | Approximate
+textRule :: Text -> Vector
+textRule t = textWidthInEm
+             *. L.over vectorDirection (rotate 0.25) (tHeight t)
+  where -- This is why it's approximate
+        approximateCharacterWidthInEm = 0.5
+        numberOfCharacters = fromIntegral (length (tText t))
+        textWidthInEm = approximateCharacterWidthInEm * numberOfCharacters
 
 image1 :: M
 image1 =
@@ -217,11 +229,9 @@ image1 =
                   }
 
       l = circleConnector c1 c2
-      t = Text { tStart  = centerLineSegment l
-                           .+ (textLength t `inDirection` left)
-               , tText   = "(p, v)"
-               , tHeight = cRadius c1 `inDirection` up
-               }
+      t = textBottomRight (centerLineSegment l)
+                          "(p, v) hello"
+                          (cRadius c1 `inDirection` up)
 
       up        = L.view vectorDirection (rAxis frame)
       right     = rotate 0.25 up
