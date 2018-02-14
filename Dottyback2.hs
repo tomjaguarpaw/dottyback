@@ -9,6 +9,7 @@ import           Data.Monoid (Monoid, mempty, mappend)
 import qualified Control.Monad.Trans.Writer as W
 import           Graphics.Rendering.Cairo (Render)
 import qualified Graphics.Rendering.Cairo as Cairo
+import qualified Graphics.Rendering.Cairo.Matrix as Matrix
 import qualified Lens.Micro as L
 import qualified Lens.Micro.Extras as L
 
@@ -34,9 +35,9 @@ data Vector = Vector
   }
 
 data Text = Text
-  { tStart :: Point
-  , tText  :: String
-  , tSize  :: Length
+  { tStart  :: Point
+  , tText   :: String
+  , tHeight :: Vector
   }
 
 vectorLength :: L.Lens' Vector Length
@@ -158,10 +159,14 @@ drawLineSegment l = M $ do
 drawText :: Text -> M
 drawText t = M $ do
   let start = tStart t
-  let Length size = tSize t
+      side  = tHeight t
+
+      length' = L.view vectorLength side /. Length 1
+      angle   = L.view vectorDirection side ..- Direction (Vector 0 (-1))
 
   Cairo.moveTo (pX start) (pY start)
-  Cairo.setFontSize size
+  Cairo.setFontMatrix ((Matrix.scale length' length'
+                        . Matrix.rotate (angle * 2 * 3.14159)) Matrix.identity)
   Cairo.showText (tText t)
 
 drawRectangle :: Rectangle -> M
@@ -184,7 +189,8 @@ drawRectangle r = M $ do
 
 -- | Approximate length
 textLength :: Text -> Length
-textLength t = (0.5 * fromIntegral (length (tText t))) *. tSize t
+textLength t = (0.5 * fromIntegral (length (tText t)))
+               *. L.view vectorLength (tHeight t)
 
 image1 :: M
 image1 =
@@ -205,10 +211,10 @@ image1 =
                   }
 
       l = circleConnector c1 c2
-      t = Text { tStart = centerLineSegment l
-                          .+ (textLength t `inDirection` left)
-               , tText = "(p, v)"
-               , tSize = cRadius c1
+      t = Text { tStart  = centerLineSegment l
+                           .+ (textLength t `inDirection` left)
+               , tText   = "(p, v)"
+               , tHeight = cRadius c1 `inDirection` up
                }
 
       up        = L.view vectorDirection (rAxis frame)
