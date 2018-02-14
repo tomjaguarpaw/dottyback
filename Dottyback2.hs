@@ -111,6 +111,15 @@ instance Multiply Vector where
 instance Multiply Length where
   l *. (Length len) = Length (l * len)
 
+class Subtract a b c | b c -> a, a b -> c, a c -> b where
+  (-.) :: a -> b -> c
+
+instance Subtract Point Point Vector where
+  (-.) = (.-)
+
+instance Subtract Direction Direction Double where
+  (-.) = (..-)
+
 (.+) :: Point -> Vector -> Point
 p .+ v = Point { pX = pX p + vX v, pY = pY p + vY v }
 
