@@ -48,7 +48,7 @@ vectorLength = L.lens get set
 vectorDirection :: L.Lens' Vector Direction
 vectorDirection = L.lens get set
   where get = Direction
-        set v d = (d ..- get v) `rotateTurns` v
+        set v d = (d -. get v) `rotateTurns` v
 
 rotateTurns :: Double -> Vector -> Vector
 rotateTurns theta v = Vector { vX =   cos (twopi * theta) * vX v
@@ -135,10 +135,10 @@ Direction v1 ..- Direction v2 = thetaRadians / (2 * 3.14159)
         thetaRadians = acos cosTheta
 
 centerLineSegment :: LineSegment -> Point
-centerLineSegment l = lStart l .+ (0.5 *. (lEnd l .- lStart l))
+centerLineSegment l = lStart l .+ (0.5 *. (lEnd l -. lStart l))
 
 fromToLength :: Point -> Point -> Length -> Point
-fromToLength p1 p2 l = p1 .+ L.set vectorLength l (p2 .- p1)
+fromToLength p1 p2 l = p1 .+ L.set vectorLength l (p2 -. p1)
 
 circleConnector :: Circle -> Circle -> LineSegment
 circleConnector c1 c2 = LineSegment {
@@ -171,7 +171,7 @@ drawText t = M $ do
       side  = tHeight t
 
       length' = L.view vectorLength side /. Length 1
-      angle   = L.view vectorDirection side ..- Direction (Vector 0 (-1))
+      angle   = L.view vectorDirection side -. Direction (Vector 0 (-1))
 
   Cairo.moveTo (pX start) (pY start)
   Cairo.setFontMatrix ((Matrix.scale length' length'
